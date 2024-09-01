@@ -65,8 +65,8 @@
             periods.forEach((period, index) => {
                 const noise = parseFloat(noises[index].value);
                 const [startDateStr, endDateStr] = period.value.split(' a ').map(date => date.trim());
-                const startDate = new Date(startDateStr);
-                const endDate = new Date(endDateStr);
+                const startDate = new Date(startDateStr.split('/').reverse().join('-'));
+                const endDate = new Date(endDateStr.split('/').reverse().join('-'));
 
                 analyzePeriod(startDate, endDate, noise);
             });
