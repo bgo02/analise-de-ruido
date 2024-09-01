@@ -68,34 +68,34 @@
                 const startDate = new Date(startDateStr);
                 const endDate = new Date(endDateStr);
 
-                const thresholds = [
-                    { date: new Date('1997-03-05'), threshold: 80 },
-                    { date: new Date('2003-11-18'), threshold: 90 },
-                    { date: new Date(), threshold: 85 }
-                ];
-
-                let currentStartDate = startDate;
-
-                thresholds.forEach(({ date, threshold }) => {
-                    if (endDate <= date) return;
-
-                    const currentEndDate = date <= endDate ? date : endDate;
-
-                    if (noise > threshold) {
-                        resultText += `Período ${formatDate(currentStartDate)} a ${formatDate(currentEndDate)} com ruído de ${noise} dB está enquadrado como especial (limite ${threshold} dB).<br>`;
-                    } else {
-                        resultText += `Período ${formatDate(currentStartDate)} a ${formatDate(currentEndDate)} com ruído de ${noise} dB não está enquadrado como especial (limite ${threshold} dB).<br>`;
-                    }
-
-                    currentStartDate = new Date(date.getTime() + 1);
-                });
+                analyzePeriod(startDate, endDate, noise);
             });
 
             document.getElementById('result').innerHTML = resultText;
-        }
 
-        function formatDate(date) {
-            return date.toLocaleDateString('pt-BR');
+            function analyzePeriod(startDate, endDate, noise) {
+                const periods = [
+                    { start: new Date('1900-01-01'), end: new Date('1997-03-05'), limit: 80 },
+                    { start: new Date('1997-03-06'), end: new Date('2003-11-18'), limit: 90 },
+                    { start: new Date('2003-11-19'), end: new Date(), limit: 85 },
+                ];
+
+                periods.forEach(({ start, end, limit }) => {
+                    if (startDate <= end && endDate >= start) {
+                        const periodStart = startDate > start ? startDate : start;
+                        const periodEnd = endDate < end ? endDate : end;
+                        if (noise > limit) {
+                            resultText += `Período ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB está enquadrado como especial (limite ${limit} dB).<br>`;
+                        } else {
+                            resultText += `Período ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB não está enquadrado como especial (limite ${limit} dB).<br>`;
+                        }
+                    }
+                });
+            }
+
+            function formatDate(date) {
+                return date.toLocaleDateString('pt-BR');
+            }
         }
     </script>
 </body>
