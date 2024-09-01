@@ -77,9 +77,9 @@
                 let currentStartDate = startDate;
 
                 thresholds.forEach(({ date, threshold }) => {
-                    if (endDate < date) return;
+                    if (endDate <= date) return;
 
-                    const currentEndDate = date < endDate ? date : endDate;
+                    const currentEndDate = date <= endDate ? date : endDate;
 
                     if (noise > threshold) {
                         resultText += `Período ${formatDate(currentStartDate)} a ${formatDate(currentEndDate)} com ruído de ${noise} dB está enquadrado como especial (limite ${threshold} dB).<br>`;
