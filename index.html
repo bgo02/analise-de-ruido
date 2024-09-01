@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Tempo Especial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Análise de Tempo Especial</h1>
+        <div id="inputs">
+            <div class="input-group">
+                <input type="text" placeholder="Período (ex: 10/09/1984 a 13/07/1989)" class="period">
+                <input type="text" placeholder="Nível de ruído (dB)" class="noise">
+                <select class="methodology">
+                    <option value="NEN">Nível de Exposição Normalizado (NEN)</option>
+                    <option value="NR15">NR-15</option>
+                    <option value="decibelimetro">Decibelímetro</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="addInput()">Adicionar outro período</button>
+        <button onclick="analyze()">Analisar</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function addInput() {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group';
+            inputGroup.innerHTML = `
+                <input type="text" placeholder="Período (ex: 10/09/1984 a 13/07/1989)" class="period">
+                <input type="text" placeholder="Nível de ruído (dB)" class="noise">
+                <select class="methodology">
+                    <option value="NEN">Nível de Exposição Normalizado (NEN)</option>
+                    <option value="NR15">NR-15</option>
+                    <option value="decibelimetro">Decibelímetro</option>
+                </select>
+            `;
+            document.getElementById('inputs').appendChild(inputGroup);
+        }
+
+        function analyze() {
+            const periods = document.querySelectorAll('.period');
+            const noises = document.querySelectorAll('.noise');
+            const methodologies = document.querySelectorAll('.methodology');
+            let resultText = '';
+
+            periods.forEach((period, index) => {
+                const noise = noises[index].value;
+                const methodology = methodologies[index].value;
+                const [startDate, endDate] = period.value.split(' a ').map(date => new Date(date.trim()));
+
+                if (startDate <= new Date('1997-03-05')) {
+                    if (noise > 80) {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
+                    } else {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
+                    }
+                } else if (startDate <= new Date('2003-11-18')) {
+                    if (noise > 90) {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
+                    } else {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
+                    }
+                } else {
+                    if (noise > 85) {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
+                    } else {
+                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
+                    }
+                }
+            });
+
+            document.getElementById('result').innerHTML = resultText;
+        }
+    </script>
+</body>
+</html>
