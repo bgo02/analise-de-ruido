@@ -39,11 +39,6 @@
             <div class="input-group">
                 <input type="text" placeholder="Período (ex: 10/09/1984 a 13/07/1989)" class="period">
                 <input type="text" placeholder="Nível de ruído (dB)" class="noise">
-                <select class="methodology">
-                    <option value="NEN">Nível de Exposição Normalizado (NEN)</option>
-                    <option value="NR15">NR-15</option>
-                    <option value="decibelimetro">Decibelímetro</option>
-                </select>
             </div>
         </div>
         <button onclick="addInput()">Adicionar outro período</button>
@@ -58,11 +53,6 @@
             inputGroup.innerHTML = `
                 <input type="text" placeholder="Período (ex: 10/09/1984 a 13/07/1989)" class="period">
                 <input type="text" placeholder="Nível de ruído (dB)" class="noise">
-                <select class="methodology">
-                    <option value="NEN">Nível de Exposição Normalizado (NEN)</option>
-                    <option value="NR15">NR-15</option>
-                    <option value="decibelimetro">Decibelímetro</option>
-                </select>
             `;
             document.getElementById('inputs').appendChild(inputGroup);
         }
@@ -70,36 +60,42 @@
         function analyze() {
             const periods = document.querySelectorAll('.period');
             const noises = document.querySelectorAll('.noise');
-            const methodologies = document.querySelectorAll('.methodology');
             let resultText = '';
 
             periods.forEach((period, index) => {
-                const noise = noises[index].value;
-                const methodology = methodologies[index].value;
-                const [startDate, endDate] = period.value.split(' a ').map(date => new Date(date.trim()));
+                const noise = parseFloat(noises[index].value);
+                const [startDateStr, endDateStr] = period.value.split(' a ').map(date => date.trim());
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
 
-                if (startDate <= new Date('1997-03-05')) {
-                    if (noise > 80) {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
+                const thresholds = [
+                    { date: new Date('1997-03-05'), threshold: 80 },
+                    { date: new Date('2003-11-18'), threshold: 90 },
+                    { date: new Date(), threshold: 85 }
+                ];
+
+                let currentStartDate = startDate;
+
+                thresholds.forEach(({ date, threshold }) => {
+                    if (endDate < date) return;
+
+                    const currentEndDate = date < endDate ? date : endDate;
+
+                    if (noise > threshold) {
+                        resultText += `Período ${formatDate(currentStartDate)} a ${formatDate(currentEndDate)} com ruído de ${noise} dB está enquadrado como especial (limite ${threshold} dB).<br>`;
                     } else {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
+                        resultText += `Período ${formatDate(currentStartDate)} a ${formatDate(currentEndDate)} com ruído de ${noise} dB não está enquadrado como especial (limite ${threshold} dB).<br>`;
                     }
-                } else if (startDate <= new Date('2003-11-18')) {
-                    if (noise > 90) {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
-                    } else {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
-                    }
-                } else {
-                    if (noise > 85) {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) está enquadrado como especial.<br>`;
-                    } else {
-                        resultText += `Período ${period.value} com ruído de ${noise} dB (${methodology}) não está enquadrado como especial.<br>`;
-                    }
-                }
+
+                    currentStartDate = new Date(date.getTime() + 1);
+                });
             });
 
             document.getElementById('result').innerHTML = resultText;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('pt-BR');
         }
     </script>
 </body>
