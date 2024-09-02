@@ -141,10 +141,12 @@
 
                     resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} atingido.<br>`;
 
-                    if (methodology) {
-                        resultText += `Adicionalmente, a metodologia empregada para a aferição do nível de ruído atendia a legislação vigente à época, conforme fundamentação contia nas premissas iniciais desta decisão.<br>`;
-                    } else {
-                        resultText += `No entanto, a metodologia empregada para a aferição do nível de ruído não atende à legislação vigente no período, conforme fundamentação contia nas premissas iniciais desta decisão, razão pela qual deve ser afastada a especialidade.<br>`;
+                    if (isSpecial) {
+                        if (methodology) {
+                            resultText += `Registro que a metodologia empregada para a aferição do nível de ruído atendia a legislação vigente à época, conforme fundamentação contida nas premissas iniciais desta decisão.<br>`;
+                        } else {
+                            resultText += `No entanto, a metodologia empregada para a aferição do nível de ruído não atende à legislação vigente no período, conforme fundamentação contida nas premissas iniciais desta decisão, razão pela qual deve ser afastada a especialidade.<br>`;
+                        }
                     }
                 }
             });
