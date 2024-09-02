@@ -71,22 +71,14 @@
                 const noiseValue = noises[index].value.trim();
                 const noise = parseFloat(noiseValue);
                 const periodValue = period.value.trim();
-                
-                if (!validateInput(periodValue, noiseValue)) {
+
+                let { startDate, endDate, error } = parsePeriod(periodValue);
+                if (error || !validateInput(noiseValue, startDate, endDate)) {
                     errorMessage += `Entrada inválida no período ${index + 1}. Verifique as datas e o nível de ruído.<br>`;
                     return;
                 }
 
-                const [startDateStr, endDateStr] = periodValue.split(' a ').map(date => date.trim());
-                const startDate = parseDate(startDateStr);
-                const endDate = parseDate(endDateStr);
-
-                if (!startDate || !endDate || startDate > endDate) {
-                    errorMessage += `Datas inválidas no período ${index + 1}.<br>`;
-                    return;
-                }
-
-                analyzePeriod(startDate, endDate, noise);
+                resultText += analyzePeriod(startDate, endDate, noise);
             });
 
             if (errorMessage) {
@@ -94,43 +86,66 @@
             } else {
                 document.getElementById('result').innerHTML = resultText;
             }
+        }
 
-            function validateInput(period, noise) {
-                return period.includes(' a ') && noise && !isNaN(noise);
+        function validateInput(noise, startDate, endDate) {
+            return noise && !isNaN(noise) && startDate && endDate && startDate <= endDate;
+        }
+
+        function parsePeriod(period) {
+            let regex = /(?:de\s*)?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s*(?:a\s*)?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i;
+            let match = period.match(regex);
+            if (!match) return { error: true };
+
+            let startDate = parseDate(match[1]);
+            let endDate = parseDate(match[2]);
+
+            return { startDate, endDate, error: !startDate || !endDate };
+        }
+
+        function parseDate(dateStr) {
+            const separators = ['/', '-', '.'];
+            for (let sep of separators) {
+                if (dateStr.includes(sep)) {
+                    const [day, month, year] = dateStr.split(sep).map(Number);
+                    const fullYear = year < 100 ? year + 2000 : year;
+                    return new Date(fullYear, month - 1, day);
+                }
             }
+            return null;
+        }
 
-            function parseDate(dateStr) {
-                const [day, month, year] = dateStr.split('/').map(Number);
-                return new Date(year, month - 1, day);
-            }
+        function analyzePeriod(startDate, endDate, noise) {
+            const periods = [
+                { start: new Date('1900-01-01'), end: new Date('1997-03-06'), limit: 80 },
+                { start: new Date('1997-03-07'), end: new Date('2003-11-19'), limit: 90 },
+                { start: new Date('2003-11-20'), end: new Date('2099-12-31'), limit: 85 },
+            ];
 
-            function analyzePeriod(startDate, endDate, noise) {
-                const periods = [
-                    { start: new Date('1900-01-01'), end: new Date('1997-03-06'), limit: 80 },
-                    { start: new Date('1997-03-06'), end: new Date('2003-11-19'), limit: 90 },
-                    { start: new Date('2003-11-19'), end: new Date('2099-12-31'), limit: 85 },
-                ];
+            let resultText = '';
+            periods.forEach(({ start, end, limit }) => {
+                if (startDate <= end && endDate >= start) {
+                    const periodStart = startDate > start ? startDate : start;
+                    const periodEnd = endDate < end ? endDate : end;
+                    const isSpecial = noise > limit;
 
-                periods.forEach(({ start, end, limit }) => {
-                    if (startDate <= end && endDate >= start) {
-                        const periodStart = startDate > start ? startDate : start;
-                        const periodEnd = endDate < end ? endDate : end;
-                        if (noise > limit) {
-                            resultText += `Período ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB está enquadrado como especial (limite ${limit} dB).<br>`;
-                        } else {
-                            resultText += `Período ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB não está enquadrado como especial (limite ${limit} dB).<br>`;
-                        }
+                    if (isSpecial) {
+                        resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB está enquadrado como especial (limite ${limit} dB).<br>`;
+                    } else {
+                        resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB não está enquadrado como especial (limite ${limit} dB).<br>`;
                     }
-                });
-            }
+                }
+            });
+            return resultText;
+        }
 
-            function formatDate(date) {
-                const day = ("0" + date.getDate()).slice(-2);
-                const month = ("0" + (date.getMonth() + 1)).slice(-2);
-                const year = date.getFullYear();
-                return `${day}/${month}/${year}`;
-            }
+        function formatDate(date) {
+            const day = ("0" + date.getDate()).slice(-2);
+            const month = ("0" + (date.getMonth() + 1)).slice(-2);
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
         }
     </script>
 </body>
 </html>
+
