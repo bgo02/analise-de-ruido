@@ -68,9 +68,9 @@
                 const startDate = new Date(startDateStr.split('/').reverse().join('-'));
                 const endDate = new Date(endDateStr.split('/').reverse().join('-'));
 
-                // Ajuste para incluir o primeiro e o último dia no período
+                // Incluir o primeiro e último dia corretamente no período
                 startDate.setDate(startDate.getDate());
-                endDate.setDate(endDate.getDate() + 1);
+                endDate.setDate(endDate.getDate());
 
                 analyzePeriod(startDate, endDate, noise);
             });
