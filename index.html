@@ -30,6 +30,10 @@
             background-color: #f0f0f0;
             border-radius: 5px;
         }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -38,7 +42,7 @@
         <div id="inputs">
             <div class="input-group">
                 <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
-                <input type="text" placeholder="Nível de ruído (dB)" class="noise">
+                <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
             </div>
         </div>
         <button onclick="addInput()">Adicionar outro período</button>
@@ -52,7 +56,7 @@
             inputGroup.className = 'input-group';
             inputGroup.innerHTML = `
                 <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
-                <input type="text" placeholder="Nível de ruído (dB)" class="noise">
+                <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
             `;
             document.getElementById('inputs').appendChild(inputGroup);
         }
@@ -61,23 +65,50 @@
             const periods = document.querySelectorAll('.period');
             const noises = document.querySelectorAll('.noise');
             let resultText = '';
+            let errorMessage = '';
 
             periods.forEach((period, index) => {
-                const noise = parseFloat(noises[index].value);
-                const [startDateStr, endDateStr] = period.value.split(' a ').map(date => date.trim());
-                const startDate = new Date(startDateStr.split('/').reverse().join('-'));
-                const endDate = new Date(endDateStr.split('/').reverse().join('-'));
+                const noiseValue = noises[index].value.trim();
+                const noise = parseFloat(noiseValue);
+                const periodValue = period.value.trim();
+                
+                if (!validateInput(periodValue, noiseValue)) {
+                    errorMessage += `Entrada inválida no período ${index + 1}. Verifique as datas e o nível de ruído.<br>`;
+                    return;
+                }
+
+                const [startDateStr, endDateStr] = periodValue.split(' a ').map(date => date.trim());
+                const startDate = parseDate(startDateStr);
+                const endDate = parseDate(endDateStr);
+
+                if (!startDate || !endDate || startDate > endDate) {
+                    errorMessage += `Datas inválidas no período ${index + 1}.<br>`;
+                    return;
+                }
 
                 analyzePeriod(startDate, endDate, noise);
             });
 
-            document.getElementById('result').innerHTML = resultText;
+            if (errorMessage) {
+                document.getElementById('result').innerHTML = `<div class="error">${errorMessage}</div>`;
+            } else {
+                document.getElementById('result').innerHTML = resultText;
+            }
+
+            function validateInput(period, noise) {
+                return period.includes(' a ') && noise && !isNaN(noise);
+            }
+
+            function parseDate(dateStr) {
+                const [day, month, year] = dateStr.split('/').map(Number);
+                return new Date(year, month - 1, day);
+            }
 
             function analyzePeriod(startDate, endDate, noise) {
                 const periods = [
                     { start: new Date('1900-01-01'), end: new Date('1997-03-05'), limit: 80 },
                     { start: new Date('1997-03-06'), end: new Date('2003-11-18'), limit: 90 },
-                    { start: new Date('2003-11-19'), end: endDate, limit: 85 },  // Considera o limite final do período do usuário
+                    { start: new Date('2003-11-19'), end: endDate, limit: 85 },
                 ];
 
                 periods.forEach(({ start, end, limit }) => {
