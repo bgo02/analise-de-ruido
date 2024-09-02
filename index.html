@@ -13,7 +13,7 @@
             max-width: 600px;
             margin: 0 auto;
         }
-        input {
+        input, label {
             padding: 10px;
             margin: 5px;
             width: 100%;
@@ -43,6 +43,10 @@
             <div class="input-group">
                 <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
                 <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
+                <label>
+                    <input type="checkbox" class="methodology" value="sim">
+                    Metodologia conforme legislação aplicada
+                </label>
             </div>
         </div>
         <button onclick="addInput()">Adicionar outro período</button>
@@ -57,6 +61,10 @@
             inputGroup.innerHTML = `
                 <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
                 <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
+                <label>
+                    <input type="checkbox" class="methodology" value="sim">
+                    Metodologia conforme legislação aplicada
+                </label>
             `;
             document.getElementById('inputs').appendChild(inputGroup);
         }
@@ -64,6 +72,7 @@
         function analyze() {
             const periods = document.querySelectorAll('.period');
             const noises = document.querySelectorAll('.noise');
+            const methodologies = document.querySelectorAll('.methodology');
             let resultText = '';
             let errorMessage = '';
 
@@ -71,6 +80,7 @@
                 const noiseValue = noises[index].value.trim();
                 const noise = parseFloat(noiseValue);
                 const periodValue = period.value.trim();
+                const methodology = methodologies[index].checked;
 
                 let { startDate, endDate, error } = parsePeriod(periodValue);
                 if (error || !validateInput(noiseValue, startDate, endDate)) {
@@ -78,7 +88,7 @@
                     return;
                 }
 
-                resultText += analyzePeriod(startDate, endDate, noise);
+                resultText += analyzePeriod(startDate, endDate, noise, methodology);
             });
 
             if (errorMessage) {
@@ -115,7 +125,7 @@
             return null;
         }
 
-        function analyzePeriod(startDate, endDate, noise) {
+        function analyzePeriod(startDate, endDate, noise, methodology) {
             const periods = [
                 { start: new Date('1900-01-01'), end: new Date('1997-03-06'), limit: 80 },
                 { start: new Date('1997-03-07'), end: new Date('2003-11-19'), limit: 90 },
@@ -129,10 +139,12 @@
                     const periodEnd = endDate < end ? endDate : end;
                     const isSpecial = noise > limit;
 
-                    if (isSpecial) {
-                        resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB está enquadrado como especial (limite ${limit} dB).<br>`;
+                    resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} atingido.<br>`;
+
+                    if (methodology) {
+                        resultText += `Adicionalmente, a metodologia empregada para a aferição do nível de ruído atendia a legislação vigente à época, conforme fundamentação contia nas premissas iniciais desta decisão.<br>`;
                     } else {
-                        resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)} com ruído de ${noise} dB não está enquadrado como especial (limite ${limit} dB).<br>`;
+                        resultText += `No entanto, a metodologia empregada para a aferição do nível de ruído não atende à legislação vigente no período, conforme fundamentação contia nas premissas iniciais desta decisão, razão pela qual deve ser afastada a especialidade.<br>`;
                     }
                 }
             });
@@ -148,4 +160,3 @@
     </script>
 </body>
 </html>
-
