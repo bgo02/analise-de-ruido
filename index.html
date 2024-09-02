@@ -144,7 +144,7 @@
                     const periodEnd = endDate < end ? endDate : end;
                     const isSpecial = noise > limit;
 
-                    resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB, ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} atingido.<br>`;
+                    resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB, ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} superado.<br>`;
 
                     if (isSpecial) {
                         if (methodology) {
