@@ -13,7 +13,7 @@
             max-width: 600px;
             margin: 0 auto;
         }
-        input, label {
+        input, label, textarea {
             padding: 10px;
             margin: 5px;
             width: 100%;
@@ -41,7 +41,7 @@
         <h1>Análise de Tempo Especial</h1>
         <div id="inputs">
             <div class="input-group">
-                <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
+                <textarea placeholder="Insira os períodos aqui (ex: de 01/06/1990 a 30/10/1991 e 02/03/1992 a 08/06/1993 - MADEIREIRA IBIRAJARA S.A.)" class="period"></textarea>
                 <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
                 <label>
                     <input type="checkbox" class="methodology" value="sim">
@@ -59,7 +59,7 @@
             const inputGroup = document.createElement('div');
             inputGroup.className = 'input-group';
             inputGroup.innerHTML = `
-                <input type="text" placeholder="Período (ex: 01/01/1992 a 05/08/2018)" class="period">
+                <textarea placeholder="Insira os períodos aqui (ex: de 01/06/1990 a 30/10/1991 e 02/03/1992 a 08/06/1993 - MADEIREIRA IBIRAJARA S.A.)" class="period"></textarea>
                 <input type="number" placeholder="Nível de ruído (dB)" class="noise" min="0">
                 <label>
                     <input type="checkbox" class="methodology" value="sim">
@@ -82,13 +82,15 @@
                 const periodValue = period.value.trim();
                 const methodology = methodologies[index].checked;
 
-                let { startDate, endDate, error } = parsePeriod(periodValue);
-                if (error || !validateInput(noiseValue, startDate, endDate)) {
+                const dateRanges = extractDateRanges(periodValue);
+                if (dateRanges.length === 0 || isNaN(noise)) {
                     errorMessage += `Entrada inválida no período ${index + 1}. Verifique as datas e o nível de ruído.<br>`;
                     return;
                 }
 
-                resultText += analyzePeriod(startDate, endDate, noise, methodology);
+                dateRanges.forEach(({ startDate, endDate }) => {
+                    resultText += analyzePeriod(startDate, endDate, noise, methodology);
+                });
             });
 
             if (errorMessage) {
@@ -98,19 +100,22 @@
             }
         }
 
-        function validateInput(noise, startDate, endDate) {
-            return noise && !isNaN(noise) && startDate && endDate && startDate <= endDate;
-        }
+        function extractDateRanges(text) {
+            const dateRanges = [];
+            const datePattern = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/g;
+            const matches = text.match(datePattern);
 
-        function parsePeriod(period) {
-            let regex = /(?:de\s*)?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s*(?:a\s*)?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i;
-            let match = period.match(regex);
-            if (!match) return { error: true };
+            if (matches && matches.length >= 2) {
+                for (let i = 0; i < matches.length; i += 2) {
+                    const startDate = parseDate(matches[i]);
+                    const endDate = parseDate(matches[i + 1]);
+                    if (startDate && endDate && startDate <= endDate) {
+                        dateRanges.push({ startDate, endDate });
+                    }
+                }
+            }
 
-            let startDate = parseDate(match[1]);
-            let endDate = parseDate(match[2]);
-
-            return { startDate, endDate, error: !startDate || !endDate };
+            return dateRanges;
         }
 
         function parseDate(dateStr) {
@@ -139,7 +144,7 @@
                     const periodEnd = endDate < end ? endDate : end;
                     const isSpecial = noise > limit;
 
-                    resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB, ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} atingido.<br>`;
+                    resultText += `Período de ${formatDate(periodStart)} a ${formatDate(periodEnd)}, com ruído de ${noise} dB ${isSpecial ? 'é' : 'não é'} reconhecido como especial, visto que o limite de ${limit} dB ${isSpecial ? 'foi' : 'não foi'} atingido.<br>`;
 
                     if (isSpecial) {
                         if (methodology) {
